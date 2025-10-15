@@ -115,20 +115,24 @@ defmodule Flock.Server do
   end
 
   def enforce_group(members, index, others) do
+    Enum.each(members, fn(member) -> disconnect_from_all(member, others) end)
     Enum.each(members, fn(member) -> set_cookie(member, index) end)
     Enum.each(
       members,
       fn(member) ->
         connect_to_all(member, members)
-        disconnect_from_all(member, others)
       end
     )
+    Process.sleep(10)
   end
 
   def connect_to_all(member, other_members) do
     Enum.each(
     other_members,
-    fn(other_member) ->
+      fn
+      (^member) -> :noop
+      (other_member) ->
+        Process.sleep(10)
       case rpc(member, :net_adm, :ping, [node_name(other_member)]) do
         :pong -> :ok
         other -> throw({:error, {:unexpected, member, other}})
@@ -140,10 +144,13 @@ defmodule Flock.Server do
   def disconnect_from_all(member, others) do
     Enum.each(
       others,
-      fn(other) ->
+      fn
+      (^member) -> :noop
+      (other) ->
+        Process.sleep(10)
         case rpc(member, :erlang, :disconnect_node, [node_name(other)]) do
-          true -> :ok
-          false-> :ok
+          true  -> :ok
+          false -> :ok
           other -> throw({:error, {:unexpected, member, other}})
         end
       end
