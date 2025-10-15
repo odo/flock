@@ -6,7 +6,7 @@ defmodule Flock.Supervisor do
   end
 
   def init([]) do
-    children = [worker(Flock.Server, [])]
-    supervise(children, strategy: :one_for_one)
+    children = [%{id: Flock.Server, type: :worker,  start: {Flock.Server, :start_link, []}}]
+    Supervisor.init(children, strategy: :one_for_one)
   end
 end
