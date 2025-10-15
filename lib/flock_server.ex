@@ -4,7 +4,7 @@ defmodule Flock.Server do
   @server :flock_server
 
   def start_node(name, options) when is_atom(name) and is_map(options) do
-    [new_node] = start_nodes([name], options)
+    [{_node_pid, new_node}] = start_nodes([name], options)
     new_node
   end
 
@@ -77,15 +77,20 @@ defmodule Flock.Server do
 
   def handle_call({:stop_node, name}, _from, state = %{nodes: nodes}) do
     node_name = node_name(name)
-    :ok = :slave.stop(node_name)
-    {:reply, :ok, %{ state | nodes: nodes -- [node_name] }}
+    case Enum.find(nodes, fn({_node_pid, node}) -> node == node_name end) do
+      node = {node_pid, _} ->
+        :ok = :peer.stop(node_pid)
+        {:reply, :ok, %{ state | nodes: nodes -- [node] }}
+      nil ->
+        {:reply, {:error, :unknown_node}, state}
+    end
   end
 
   def handle_call({:stop_all}, _from, state = %{nodes: nodes}) do
     Enum.each(
       nodes,
-      fn(node_name) ->
-        :ok = :slave.stop(node_name)
+      fn({node_pid, _node}) ->
+        :ok = :peer.stop(node_pid)
       end
     )
     {:reply, :ok, %{ state | nodes: [] }}
@@ -102,7 +107,7 @@ defmodule Flock.Server do
   end
 
   def handle_call({:nodes}, _from, state = %{nodes: nodes}) do
-    {:reply, nodes, state}
+    {:reply, Enum.map(nodes, fn({_pid, node}) -> node end), state}
   end
 
   def enforce_groups(groups) do
@@ -163,16 +168,16 @@ defmodule Flock.Server do
 
   def start_node(name) do
     # start the node
-    {:ok, node} = :slave.start_link(:localhost, name)
+    {:ok, node_pid, node} = :peer.start_link(%{host: ~c"localhost", name: name})
     # add all the paths
     Enum.each(
       :code.get_path,
       fn(path) -> true = :rpc.call(node, :code, :add_path, [path]) end
     )
-    node
+    {node_pid, node}
   end
 
-  def prepare_node(node, rpcs) do
+  def prepare_node({_node_pid, node}, rpcs) do
     Enum.each(
       rpcs,
       fn({module, function, args}) ->
@@ -191,8 +196,8 @@ defmodule Flock.Server do
     String.to_atom(Atom.to_string(name) <> "@localhost")
   end
 
-  def node_id(node_name) do
-    [_, id] = Regex.run(~r/([^@]*)@/, Atom.to_string(node_name))
+  def node_id({_node_pid, node}) do
+    [_, id] = Regex.run(~r/([^@]*)@/, Atom.to_string(node))
     String.to_atom(id)
   end
 
