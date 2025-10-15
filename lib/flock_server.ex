@@ -4,12 +4,13 @@ defmodule Flock.Server do
   @server :flock_server
 
   def start_node(name, options) when is_atom(name) and is_map(options) do
-    [{_node_pid, new_node}] = start_nodes([name], options)
+    [new_node] = start_nodes([name], options)
     new_node
   end
 
   def start_nodes(names = [first_name|_], options) when is_map(options) and is_atom(first_name) do
     start_nodes([names], options)
+    |> Enum.map(fn({_node_pid, node}) -> node end)
   end
 
   def start_nodes(groups = [first_group|_], options) when is_map(options) and is_list(first_group) do
