@@ -5,10 +5,7 @@ defmodule Flock.Mixfile do
     [app: :flock,
      version: "1.0.0",
      elixir: "~> 1.0",
-     name: "flock",
-     description: "Simulation of distributed Erlang/Elixir with network splits and re-joins",
-     source_url: "https://github.com/odo/flock",
-     licenses: ["MIT"],
+     package: package(),
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
      deps: deps()]
@@ -32,5 +29,14 @@ defmodule Flock.Mixfile do
   # Type `mix help deps` for more examples and options
   defp deps do
     []
+  end
+
+  defp package() do
+    [
+     name: "flock",
+     description: "Simulation of distributed Erlang/Elixir with network splits and re-joins",
+     links: %{"GitHub" => "https://github.com/odo/flock"},
+     licenses: ["MIT"],
+    ]
   end
 end
