@@ -3,8 +3,12 @@ defmodule Flock.Mixfile do
 
   def project do
     [app: :flock,
-     version: "0.0.1",
+     version: "1.0.0",
      elixir: "~> 1.0",
+     name: "flock",
+     description: "Simulation of distributed Erlang/Elixir with network splits and re-joins",
+     source_url: "https://github.com/odo/flock",
+     licenses: ["MIT"],
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
      deps: deps()]
