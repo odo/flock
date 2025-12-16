@@ -1,4 +1,4 @@
-defmodule Flock.Mixfile do
+defmodule Flock.MixProject do
   use Mix.Project
 
   def project do
@@ -15,7 +15,7 @@ defmodule Flock.Mixfile do
   #
   # Type `mix help compile.app` for more information
   def application do
-    [mod: {Flock, []}, applications: [:logger]]
+    [mod: {Flock, []}, extra_applications: [:logger]]
   end
 
   # Dependencies can be Hex packages:
@@ -28,7 +28,7 @@ defmodule Flock.Mixfile do
   #
   # Type `mix help deps` for more examples and options
   defp deps do
-    []
+    [{:ex_doc, ">= 0.0.0", only: :dev, runtime: false}]
   end
 
   defp package() do
